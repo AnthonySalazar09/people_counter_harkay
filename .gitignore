@@ -1,0 +1,4 @@
+build_cpp/
+*.exe
+*.pdb
+*.ilk
