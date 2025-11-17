@@ -31,9 +31,8 @@ vector<string> loadClassNames(const string& classesFile) {
 vector<string> getOutputsNames(const Net& net) {
     static vector<string> names;
     if (names.empty()) {
-        // Nombres de todas las capas
+        
         vector<string> layersNames = net.getLayerNames();
-        // Índices de capas de salida
         vector<int> outLayers = net.getUnconnectedOutLayers();
         names.resize(outLayers.size());
         for (size_t i = 0; i < outLayers.size(); ++i) {
@@ -44,7 +43,6 @@ vector<string> getOutputsNames(const Net& net) {
 }
 
 int main(int argc, char** argv) {
-    // Parámetros de entrada / salida por defecto
     string inputPath = "input_video.mp4";
     string outputPath = "output_video_cpp.mp4";
     string cfgPath = "yolov3-tiny.cfg";
@@ -52,10 +50,10 @@ int main(int argc, char** argv) {
     string namesPath = "coco.names";
 
     if (argc >= 2) {
-        inputPath = argv[1];  // 1er arg: video de entrada
+        inputPath = argv[1];  
     }
     if (argc >= 3) {
-        outputPath = argv[2]; // 2do arg: video de salida
+        outputPath = argv[2]; 
     }
 
     float confThreshold = 0.5f;
@@ -91,7 +89,7 @@ int main(int argc, char** argv) {
 
     double fps = cap.get(CAP_PROP_FPS);
     if (fps <= 0.0 || std::isnan(fps)) {
-        fps = 30.0; // por defecto
+        fps = 30.0; 
     }
     int width = static_cast<int>(cap.get(CAP_PROP_FRAME_WIDTH));
     int height = static_cast<int>(cap.get(CAP_PROP_FRAME_HEIGHT));
@@ -113,16 +111,15 @@ int main(int argc, char** argv) {
     while (true) {
         cap >> frame;
         if (frame.empty()) {
-            break; // fin del video
+            break; 
         }
         frameIndex++;
 
-        // Crear blob para YOLO
+        
         Mat blob;
         blobFromImage(frame, blob, 1 / 255.0, Size(416, 416), Scalar(), true, false);
         net.setInput(blob);
 
-        // Forward
         vector<Mat> outs;
         net.forward(outs, getOutputsNames(net));
 
@@ -130,7 +127,6 @@ int main(int argc, char** argv) {
         vector<float> confidences;
         vector<int> classIds;
 
-        // Procesar salidas
         for (size_t i = 0; i < outs.size(); ++i) {
             float* data = (float*)outs[i].data;
             for (int j = 0; j < outs[i].rows; ++j, data += outs[i].cols) {
@@ -158,19 +154,16 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Non-Max Suppression
         vector<int> indices;
         dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
 
         int personCount = static_cast<int>(indices.size());
 
-        // Dibujar cajas
         for (int idx : indices) {
             Rect box = boxes[idx];
             rectangle(frame, box, Scalar(0, 255, 0), 2);
         }
 
-        // Escribir texto con conteo
         string label = "Personas: " + to_string(personCount);
         putText(frame, label, Point(10, 30),
                 FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 255), 2);
@@ -180,7 +173,6 @@ int main(int argc, char** argv) {
         // Guardar al video de salida
         writer.write(frame);
 
-        // Mostrar ventana
         imshow("People Counter - C++", frame);
         char c = (char)waitKey(1);
         if (c == 'q' || c == 27) { // 'q' o ESC
